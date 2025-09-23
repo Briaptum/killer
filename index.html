@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluff - Whose Bluffing? Online Multiplayer</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Connection Screen -->
+        <div id="connection-screen" class="screen active">
+            <div class="game-header">
+                <h1>🎭 Bluff - Whose Bluffing?</h1>
+                <p>Online Multiplayer Edition</p>
+            </div>
+            
+            <div class="connection-content">
+                <div class="connection-options">
+                    <div class="option-card">
+                        <h3>Create New Game</h3>
+                        <p>Start a new game room and invite friends</p>
+                        <button id="create-room-btn" class="primary-btn">Create Room</button>
+                    </div>
+                    
+                    <div class="option-card">
+                        <h3>Join Existing Game</h3>
+                        <p>Enter a room code to join a friend's game</p>
+                        <input type="text" id="room-code-input" placeholder="Enter room code..." maxlength="6">
+                        <button id="join-room-btn" class="primary-btn">Join Room</button>
+                    </div>
+                </div>
+                
+                <div class="player-name-section">
+                    <h4>Your Name:</h4>
+                    <input type="text" id="player-name-connection" placeholder="Enter your name..." maxlength="20">
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Lobby Screen -->
+        <div id="lobby-screen" class="screen">
+            <div class="lobby-content">
+                <div class="room-info">
+                    <h2>Game Room</h2>
+                    <div class="room-code">
+                        <span>Room Code: </span>
+                        <strong id="current-room-code">ABCD12</strong>
+                        <button id="copy-room-code" class="copy-btn">📋 Copy</button>
+                    </div>
+                </div>
+                
+                <div class="category-selection">
+                    <h3>Choose a Category:</h3>
+                    <div class="category-buttons">
+                        <button class="category-btn" data-category="movies">🎬 Movies</button>
+                        <button class="category-btn" data-category="singers">🎤 Singers</button>
+                        <button class="category-btn" data-category="historical">🏛️ Historical Figures</button>
+                        <button class="category-btn" data-category="animals">🐾 Animals</button>
+                        <button class="category-btn" data-category="countries">🌍 Countries</button>
+                    </div>
+                </div>
+                
+                <div class="players-section">
+                    <h3>Players in Room (<span id="player-count">0</span>/8):</h3>
+                    <div class="online-players-list" id="online-players-list"></div>
+                </div>
+                
+                <div class="lobby-actions">
+                    <button id="start-online-game-btn" class="primary-btn" disabled>Start Game</button>
+                    <button id="leave-room-btn" class="secondary-btn">Leave Room</button>
+                </div>
+                
+                <div class="waiting-message" id="waiting-message" style="display: none;">
+                    <p>Waiting for host to start the game...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Assignment Screen -->
+        <div id="online-role-screen" class="screen">
+            <div class="role-content">
+                <h2>Your Secret Role</h2>
+                <div id="online-role-display" class="role-card">
+                    <div id="online-role-content"></div>
+                </div>
+                <button id="role-understood-btn" class="primary-btn">I Understand My Role</button>
+            </div>
+        </div>
+
+        <!-- Clue Phase Screen -->
+        <div id="online-clue-screen" class="screen">
+            <div class="clue-content">
+                <h2>Submit Your Clue</h2>
+                <div class="game-info">
+                    <p><strong>Category:</strong> <span id="online-game-category"></span></p>
+                </div>
+                
+                <div class="online-word-reminder" id="online-word-reminder"></div>
+                
+                <div class="clue-input-section">
+                    <input type="text" id="online-clue-input" placeholder="Enter your clue (be subtle!)..." maxlength="50">
+                    <button id="submit-online-clue-btn" class="primary-btn">Submit Clue</button>
+                </div>
+                
+                <div class="clues-progress">
+                    <p>Clues submitted: <span id="online-clues-count">0</span>/<span id="online-total-players">0</span></p>
+                    <div class="submitted-players" id="submitted-players"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clues Display Screen -->
+        <div id="online-clues-display-screen" class="screen">
+            <div class="clues-display-content">
+                <h2>All Clues</h2>
+                <div class="game-info">
+                    <p><strong>Category:</strong> <span id="online-display-category"></span></p>
+                </div>
+                
+                <div class="clues-list" id="online-all-clues"></div>
+                
+                <div class="proceed-section">
+                    <p>Review the clues and get ready to vote!</p>
+                    <button id="ready-to-vote-btn" class="primary-btn">I'm Ready to Vote</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voting Phase Screen -->
+        <div id="online-voting-screen" class="screen">
+            <div class="voting-content">
+                <h2>Vote for the Bluffer</h2>
+                <p>Who do you think is the bluffer?</p>
+                
+                <div class="vote-buttons" id="online-vote-buttons"></div>
+                
+                <div class="voting-progress">
+                    <p>Votes cast: <span id="online-votes-count">0</span>/<span id="online-total-voters">0</span></p>
+                    <div class="voted-players" id="voted-players"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bluffer Guess Screen -->
+        <div id="online-guess-screen" class="screen">
+            <div class="guess-content">
+                <h2 id="bluffer-guess-title">Bluffer's Last Chance!</h2>
+                <div id="bluffer-message"></div>
+                
+                <div class="guess-input-section" id="bluffer-guess-section" style="display: none;">
+                    <input type="text" id="online-word-guess-input" placeholder="Enter your guess..." maxlength="30">
+                    <button id="submit-online-guess-btn" class="primary-btn">Submit Guess</button>
+                </div>
+                
+                <div id="waiting-for-bluffer" style="display: none;">
+                    <p>Waiting for the bluffer to make their guess...</p>
+                    <div class="loading"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="online-results-screen" class="screen">
+            <div class="results-content">
+                <div class="results-header">
+                    <h2 id="online-game-result">Game Result</h2>
+                    <div class="winner-announcement" id="online-winner-announcement"></div>
+                </div>
+                
+                <div class="game-summary">
+                    <div class="reveal-section">
+                        <h3>Game Summary</h3>
+                        <p><strong>The secret word was:</strong> <span id="online-secret-word-reveal"></span></p>
+                        <p><strong>The bluffer was:</strong> <span id="online-bluffer-reveal"></span></p>
+                        <p><strong>Category:</strong> <span id="online-results-category"></span></p>
+                    </div>
+                    
+                    <div class="voting-results" id="online-voting-results"></div>
+                </div>
+                
+                <div class="results-actions">
+                    <button id="play-online-again-btn" class="primary-btn">Play Again</button>
+                    <button id="new-online-game-btn" class="secondary-btn">New Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Status -->
+        <div id="connection-status" class="connection-status">
+            <span id="status-indicator">🔗</span>
+            <span id="status-text">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Load Socket.IO from CDN -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="multiplayer.js"></script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluff - Whose Bluffing? Multiplayer Game</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Start/Setup Screen -->
+        <div id="setup-screen" class="screen active">
+            <div class="game-header">
+                <h1>🎭 Bluff - Whose Bluffing?</h1>
+                <p>A multiplayer bluffing game for 4-8 players</p>
+            </div>
+            
+            <div class="setup-content">
+                <div class="category-selection">
+                    <h3>Choose a Category:</h3>
+                    <div class="category-buttons">
+                        <button class="category-btn" data-category="movies">🎬 Movies</button>
+                        <button class="category-btn" data-category="singers">🎤 Singers</button>
+                        <button class="category-btn" data-category="historical">🏛️ Historical Figures</button>
+                        <button class="category-btn" data-category="animals">🐾 Animals</button>
+                        <button class="category-btn" data-category="countries">🌍 Countries</button>
+                    </div>
+                </div>
+                
+                <div class="player-setup">
+                    <h3>Add Players (4-8 required):</h3>
+                    <div class="player-input-section">
+                        <input type="text" id="player-name-input" placeholder="Enter player name..." maxlength="20">
+                        <button id="add-player-btn">Add Player</button>
+                    </div>
+                    <div class="players-list">
+                        <h4>Players:</h4>
+                        <ul id="players-display"></ul>
+                    </div>
+                </div>
+                
+                <button id="start-game-btn" class="primary-btn" disabled>Start Game</button>
+            </div>
+        </div>
+
+        <!-- Word Assignment Screen -->
+        <div id="assignment-screen" class="screen">
+            <div class="assignment-content">
+                <h2>Role Assignment</h2>
+                <p>Pass the device to each player to see their role secretly</p>
+                
+                <div class="player-turn">
+                    <h3 id="current-player-name">Player Name</h3>
+                    <button id="reveal-role-btn" class="reveal-btn">Tap to See Your Role</button>
+                </div>
+                
+                <div id="role-display" class="role-card hidden">
+                    <div id="role-content"></div>
+                    <button id="next-player-btn" class="primary-btn">Next Player</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clue Phase Screen -->
+        <div id="clue-screen" class="screen">
+            <div class="clue-content">
+                <h2>Give Your Clue</h2>
+                <div class="game-info">
+                    <p><strong>Category:</strong> <span id="game-category"></span></p>
+                    <p><strong>Round:</strong> <span id="round-number">1</span></p>
+                </div>
+                
+                <div class="clue-input-section">
+                    <h3 id="clue-player-name">Player Name's Turn</h3>
+                    <div class="word-reminder" id="word-reminder"></div>
+                    <input type="text" id="clue-input" placeholder="Enter your clue (be subtle!)..." maxlength="50">
+                    <button id="submit-clue-btn" class="primary-btn">Submit Clue</button>
+                </div>
+                
+                <div class="clues-progress">
+                    <p>Clues submitted: <span id="clues-count">0</span>/<span id="total-players">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clues Display Screen -->
+        <div id="clues-display-screen" class="screen">
+            <div class="clues-display-content">
+                <h2>All Clues</h2>
+                <div class="game-info">
+                    <p><strong>Category:</strong> <span id="display-category"></span></p>
+                </div>
+                
+                <div class="clues-list" id="all-clues"></div>
+                
+                <button id="proceed-to-voting-btn" class="primary-btn">Proceed to Voting</button>
+            </div>
+        </div>
+
+        <!-- Voting Phase Screen -->
+        <div id="voting-screen" class="screen">
+            <div class="voting-content">
+                <h2>Vote for the Bluffer</h2>
+                <p>Who do you think is the bluffer?</p>
+                
+                <div class="voting-section">
+                    <h3 id="voting-player-name">Player Name's Vote</h3>
+                    <div class="vote-buttons" id="vote-buttons"></div>
+                </div>
+                
+                <div class="voting-progress">
+                    <p>Votes cast: <span id="votes-count">0</span>/<span id="total-voters">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bluffer Guess Screen -->
+        <div id="guess-screen" class="screen">
+            <div class="guess-content">
+                <h2>Bluffer's Last Chance!</h2>
+                <p><strong id="bluffer-name">Bluffer</strong>, you survived the voting!</p>
+                <p>Guess the secret word to win the game:</p>
+                
+                <div class="guess-input-section">
+                    <input type="text" id="word-guess-input" placeholder="Enter your guess..." maxlength="30">
+                    <button id="submit-guess-btn" class="primary-btn">Submit Guess</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <div class="results-content">
+                <div class="results-header">
+                    <h2 id="game-result">Game Result</h2>
+                    <div class="winner-announcement" id="winner-announcement"></div>
+                </div>
+                
+                <div class="game-summary">
+                    <div class="reveal-section">
+                        <h3>Game Summary</h3>
+                        <p><strong>The secret word was:</strong> <span id="secret-word-reveal"></span></p>
+                        <p><strong>The bluffer was:</strong> <span id="bluffer-reveal"></span></p>
+                        <p><strong>Category:</strong> <span id="results-category"></span></p>
+                    </div>
+                    
+                    <div class="voting-results" id="voting-results"></div>
+                </div>
+                
+                <div class="results-actions">
+                    <button id="play-again-btn" class="primary-btn">Play Again</button>
+                    <button id="new-game-btn" class="secondary-btn">New Game Setup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
