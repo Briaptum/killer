@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Bluff - Whose Bluffing? Multiplayer Game</title>
     <link rel="stylesheet" href="main.css">
 </head>
@@ -117,13 +117,55 @@
         <!-- Bluffer Guess Screen -->
         <div id="guess-screen" class="screen">
             <div class="guess-content">
-                <h2>Bluffer's Last Chance!</h2>
+                <h2>Bluffer's Chance!</h2>
                 <p><strong id="bluffer-name">Bluffer</strong>, you survived the voting!</p>
-                <p>Guess the secret word to win the game:</p>
+                <p>You have <strong id="remaining-guesses">3</strong> attempts to guess the secret word:</p>
+                
+                <div id="guess-history" class="guess-history"></div>
                 
                 <div class="guess-input-section">
                     <input type="text" id="word-guess-input" placeholder="Enter your guess..." maxlength="30">
-                    <button id="submit-guess-btn" class="primary-btn">Submit Guess</button>
+                    <button id="submit-guess-btn" class="primary-btn">Submit Guess (<span id="attempt-number">1</span>/3)</button>
+                </div>
+                
+                <div id="guess-feedback" class="guess-feedback"></div>
+            </div>
+        </div>
+
+        <!-- Post-Guess Decision Screen -->
+        <div id="decision-screen" class="screen">
+            <div class="decision-content">
+                <h2>What should happen next?</h2>
+                <div class="guess-result-summary" id="guess-result-summary"></div>
+                
+                <div class="decision-voting-section">
+                    <h3 id="decision-player-name">Player Name's Choice</h3>
+                    <p>Choose what you think should happen next:</p>
+                    
+                    <div class="decision-buttons">
+                        <button class="decision-btn" data-choice="clues">
+                            🎯 Give More Clues
+                            <span class="choice-description">Continue the game with additional clues</span>
+                        </button>
+                        <button class="decision-btn" data-choice="vote">
+                            🗳️ Vote to Eliminate
+                            <span class="choice-description">Try to eliminate the bluffer now</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="decision-progress">
+                    <p>Decisions made: <span id="decisions-count">0</span>/<span id="total-decision-makers">0</span></p>
+                    <div class="decision-tally">
+                        <div class="tally-item">
+                            <span class="tally-label">More Clues:</span>
+                            <span id="clues-votes">0</span>
+                        </div>
+                        <div class="tally-item">
+                            <span class="tally-label">Vote to Eliminate:</span>
+                            <span id="eliminate-votes">0</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

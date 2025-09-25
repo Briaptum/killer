@@ -11,6 +11,13 @@ class BluffGame {
         this.votes = [];
         this.currentPhase = 'setup';
         this.wordLists = this.initializeWordLists();
+        this.guessAttempts = 0;
+        this.maxGuessAttempts = 3;
+        this.guessHistory = [];
+        this.decisions = [];
+        this.currentDecisionIndex = 0;
+        this.clueRound = 1;
+        this.isLastAttempt = false;
         
         this.initializeEventListeners();
         this.showScreen('setup-screen');
@@ -124,6 +131,14 @@ class BluffGame {
         document.getElementById('new-game-btn').addEventListener('click', () => {
             this.newGame();
         });
+
+        // Decision phase buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('decision-btn')) {
+                const choice = e.target.dataset.choice;
+                this.submitDecision(choice);
+            }
+        });
     }
 
     addPlayer() {
@@ -191,6 +206,11 @@ class BluffGame {
         this.clues = [];
         this.votes = [];
         this.currentPhase = 'assignment';
+        this.guessAttempts = 0;
+        this.guessHistory = [];
+        this.decisions = [];
+        this.currentDecisionIndex = 0;
+        this.clueRound = 1;
 
         this.showScreen('assignment-screen');
         this.updateAssignmentScreen();
@@ -251,6 +271,12 @@ class BluffGame {
         const currentPlayer = this.players[this.currentPlayerIndex];
         playerName.textContent = `${currentPlayer.name}'s Turn`;
         gameCategory.textContent = this.currentCategory;
+        
+        // Update round number
+        const roundNumber = document.getElementById('round-number');
+        if (roundNumber) {
+            roundNumber.textContent = this.clueRound;
+        }
         
         if (currentPlayer.isBluffer) {
             wordReminder.innerHTML = `You are the BLUFFER! You don't know the word.`;
@@ -397,36 +423,219 @@ class BluffGame {
         
         if (isTie || maxVotes === 0) {
             // Tie or no votes - bluffer survives, goes to guess phase
-            this.showScreen('guess-screen');
-            document.getElementById('bluffer-name').textContent = blufferName;
-            document.getElementById('word-guess-input').focus();
+            this.initializeGuessPhase(blufferName);
         } else if (mostVotedPlayer === blufferName) {
             // Imposter was caught - players win
             this.endGame('innocents', 'The bluffer was caught!', voteCount);
         } else {
             // Wrong player voted out - bluffer gets to guess
-            this.showScreen('guess-screen');
-            document.getElementById('bluffer-name').textContent = blufferName;
-            document.getElementById('word-guess-input').focus();
+            this.initializeGuessPhase(blufferName);
         }
     }
 
-    submitImposterGuess() {
+    initializeGuessPhase(blufferName) {
+        // Reset guess tracking
+        this.guessAttempts = 0;
+        this.guessHistory = [];
+        this.decisions = [];
+        this.currentDecisionIndex = 0;
+        
+        // Show guess screen
+        this.showScreen('guess-screen');
+        document.getElementById('bluffer-name').textContent = blufferName;
+        
+        // Initialize UI elements
+        this.updateGuessScreen();
+        document.getElementById('guess-feedback').innerHTML = '';
+        document.getElementById('word-guess-input').value = '';
+        document.getElementById('word-guess-input').focus();
+    }
+
+    submitBlufferGuess() {
         const guessInput = document.getElementById('word-guess-input');
         const guess = guessInput.value.trim().toLowerCase();
         const correctWord = this.currentWord.toLowerCase();
         
         if (guess) {
-            const voteCount = this.getVoteCount();
+            this.guessAttempts++;
+            this.isLastAttempt = (this.guessAttempts >= this.maxGuessAttempts);
+            
+            // Add guess to history
+            this.guessHistory.push({
+                attempt: this.guessAttempts,
+                guess: guess,
+                isCorrect: guess === correctWord
+            });
             
             if (guess === correctWord) {
-                // Imposter guessed correctly - bluffer wins
-                this.endGame('bluffer', `The bluffer guessed "${this.currentWord}" correctly!`, voteCount);
+                // Bluffer guessed correctly - bluffer wins
+                const voteCount = this.getVoteCount();
+                this.endGame('bluffer', `The bluffer guessed "${this.currentWord}" correctly on attempt ${this.guessAttempts}!`, voteCount);
             } else {
-                // Imposter guessed wrong - players win
-                this.endGame('innocents', `The bluffer guessed "${guess}" but the word was "${this.currentWord}"`, voteCount);
+                // Show feedback and go to decision phase
+                this.showGuessFeedback(guess, false);
+                
+                if (this.isLastAttempt) {
+                    // Last attempt failed - go straight to final voting
+                    this.startVoting();
+                } else {
+                    // Let players decide what to do next
+                    this.startDecisionPhase(guess);
+                }
             }
         }
+    }
+
+    showGuessFeedback(guess, isCorrect) {
+        const feedbackDiv = document.getElementById('guess-feedback');
+        
+        if (isCorrect) {
+            feedbackDiv.innerHTML = `
+                <div class="feedback correct">
+                    ✅ Correct! "${guess}" is the secret word!
+                </div>
+            `;
+        } else {
+            const remainingAttempts = this.maxGuessAttempts - this.guessAttempts;
+            feedbackDiv.innerHTML = `
+                <div class="feedback incorrect">
+                    ❌ "${guess}" is incorrect. ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining.
+                </div>
+            `;
+        }
+    }
+    
+    updateGuessScreen() {
+        const remainingGuesses = document.getElementById('remaining-guesses');
+        const attemptNumber = document.getElementById('attempt-number');
+        const guessHistory = document.getElementById('guess-history');
+        
+        const remaining = this.maxGuessAttempts - this.guessAttempts;
+        remainingGuesses.textContent = remaining;
+        attemptNumber.textContent = this.guessAttempts + 1;
+        
+        // Update guess history display
+        guessHistory.innerHTML = '';
+        this.guessHistory.forEach((historyItem) => {
+            const historyDiv = document.createElement('div');
+            historyDiv.className = `guess-history-item ${historyItem.isCorrect ? 'correct' : 'incorrect'}`;
+            historyDiv.innerHTML = `
+                <span class="attempt-number">Attempt ${historyItem.attempt}:</span>
+                <span class="guess-text">"${historyItem.guess}"</span>
+                <span class="result">${historyItem.isCorrect ? '✅' : '❌'}</span>
+            `;
+            guessHistory.appendChild(historyDiv);
+        });
+    }
+
+    startDecisionPhase(lastGuess) {
+        // Reset decision tracking
+        this.decisions = [];
+        this.currentDecisionIndex = 0;
+        this.currentPhase = 'decision';
+        
+        // Show decision screen
+        this.showScreen('decision-screen');
+        
+        // Update the guess result summary
+        const summary = document.getElementById('guess-result-summary');
+        const remainingAttempts = this.maxGuessAttempts - this.guessAttempts;
+        summary.innerHTML = `
+            <div class="result-summary">
+                <h3>Guess Result - Round ${this.guessAttempts}</h3>
+                <p><strong>The guess:</strong> "${lastGuess}" was <span class="incorrect">incorrect</span></p>
+                <p>The bluffer has <strong>${remainingAttempts}</strong> attempt${remainingAttempts !== 1 ? 's' : ''} remaining.</p>
+                <div class="decision-info">
+                    <p>You can:</p>
+                    <ul>
+                        <li>Give more clues if you're not sure who the bluffer is</li>
+                        <li>Vote to eliminate if you think you know who the bluffer is</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        this.updateDecisionScreen();
+    }
+    
+    updateDecisionScreen() {
+        const playerName = document.getElementById('decision-player-name');
+        const decisionsCount = document.getElementById('decisions-count');
+        const totalDecisionMakers = document.getElementById('total-decision-makers');
+        const cluesVotes = document.getElementById('clues-votes');
+        const eliminateVotes = document.getElementById('eliminate-votes');
+        
+        // Exclude the bluffer from decision making
+        const nonBlufferPlayers = this.players.filter((_, index) => index !== this.blufferIndex);
+        const currentPlayer = nonBlufferPlayers[this.currentDecisionIndex];
+        
+        playerName.textContent = `${currentPlayer.name}'s Choice`;
+        decisionsCount.textContent = this.decisions.length;
+        totalDecisionMakers.textContent = nonBlufferPlayers.length;
+        
+        // Count decisions
+        const cluesCount = this.decisions.filter(d => d.choice === 'clues').length;
+        const eliminateCount = this.decisions.filter(d => d.choice === 'vote').length;
+        
+        cluesVotes.textContent = cluesCount;
+        eliminateVotes.textContent = eliminateCount;
+        
+        // Reset button selections
+        document.querySelectorAll('.decision-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+    }
+    
+    submitDecision(choice) {
+        const nonBlufferPlayers = this.players.filter((_, index) => index !== this.blufferIndex);
+        const currentPlayer = nonBlufferPlayers[this.currentDecisionIndex];
+        
+        // Record decision
+        this.decisions.push({
+            player: currentPlayer.name,
+            choice: choice
+        });
+        
+        // Highlight selected choice
+        document.querySelectorAll('.decision-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        document.querySelector(`[data-choice="${choice}"]`).classList.add('selected');
+        
+        // Move to next player or process results
+        setTimeout(() => {
+            this.currentDecisionIndex++;
+            
+            if (this.currentDecisionIndex >= nonBlufferPlayers.length) {
+                // All decisions made, process results
+                this.processDecisionResults();
+            } else {
+                this.updateDecisionScreen();
+            }
+        }, 1000);
+    }
+    
+    processDecisionResults() {
+        const cluesCount = this.decisions.filter(d => d.choice === 'clues').length;
+        const eliminateCount = this.decisions.filter(d => d.choice === 'vote').length;
+        
+        if (eliminateCount > cluesCount) {
+            // Majority wants to vote - go to voting phase
+            this.startVoting();
+        } else {
+            // Majority wants more clues or tie - continue with more clues
+            this.startAdditionalClueRound();
+        }
+    }
+    
+    startAdditionalClueRound() {
+        this.clueRound++;
+        this.currentPlayerIndex = 0;
+        this.currentPhase = 'clues';
+        
+        // Don't clear clues, just continue from where we left off
+        this.showScreen('clue-screen');
+        this.updateClueScreen();
     }
 
     getVoteCount() {
@@ -490,6 +699,11 @@ class BluffGame {
         this.clues = [];
         this.votes = [];
         this.currentPhase = 'setup';
+        this.guessAttempts = 0;
+        this.guessHistory = [];
+        this.decisions = [];
+        this.currentDecisionIndex = 0;
+        this.clueRound = 1;
         
         // Reset UI
         document.getElementById('player-name-input').value = '';
